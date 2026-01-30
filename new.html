@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mini OS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div id="desktop">
+
+  <!-- Desktop Icons -->
+  <div class="icon" ondblclick="openNotepad()">
+    <div>📝</div>
+    <span>Notepad</span>
+  </div>
+  <div class="icon" ondblclick="openExplorer()">
+    <div>📁</div>
+    <span>Explorer</span>
+  </div>
+  <div class="icon" ondblclick="openWallpapers()">
+    <div>🖼️</div>
+    <span>Wallpapers</span>
+  </div>
+  <div class="icon" ondblclick="openRecycle()">
+    <div>🗑️</div>
+    <span>Recycle Bin</span>
+  </div>
+
+  <div id="taskbar">
+    <div id="taskbar-items"></div>
+    <div id="system-tray">
+      <span id="clock">00:00</span>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>      
+</html>
