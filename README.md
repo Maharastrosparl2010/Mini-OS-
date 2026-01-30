@@ -1,2 +1,2 @@
-# Mini-OS-
-it is a mini os webapp designed for analyzing and understanding the basic fundamental working functions of and expatiating system  it is designed a very simple minimalistic way for greater understanding  of the fundamentals  
+Mini OS 
+“Mini-OS is a simple, web-based operating system simulation designed to help users learn and understand fundamental OS concepts in a minimalistic and accessible way.”
