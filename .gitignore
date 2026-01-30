@@ -1,4 +1,36 @@
-/.vscode
-/soap.css
-/soap.html
-/soap.png
+# VS Code settings
+/.vscode/
+
+# Node/npm (if you ever use it)
+/node_modules/
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+
+# Build/output files (if you create dist or build folders)
+dist/
+build/
+
+# Optional: image/temp files you don’t want to track
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.ico
+
+# Ignore temporary files from editors
+*.swp
+*.swo
