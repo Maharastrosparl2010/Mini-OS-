@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>All In One Community - Final Pro</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="comm.css">
+</head>
+<body>
+
+    <input type="file" id="avatar-input" hidden onchange="app.uploadAvatar()" accept="image/*">
+
+    <div id="msg-options" style="position:fixed;bottom:20px;right:20px;background:#18181b;border:1px solid #333;border-radius:12px;padding:10px;z-index:8000;display:none;flex-direction:column;gap:10px;min-width:150px">
+        <button onclick="app.doReply()" style="padding:8px;background:#1e1e1e;border:1px solid #333;color:white;border-radius:6px;cursor:pointer">Reply</button>
+        <button onclick="app.showInfo()" style="padding:8px;background:#1e1e1e;border:1px solid #333;color:white;border-radius:6px;cursor:pointer">Info</button>
+        <button id="btn-msg-del" onclick="app.doDelMsg()" style="padding:8px;background:var(--danger);border:none;color:white;border-radius:6px;cursor:pointer;display:none">Delete</button>
+    </div>
+
+    <div id="loader-overlay">
+        <div class="spinner"></div>
+        <p style="margin-top:15px;color:white">Syncing...</p>
+    </div>
+    
+    <div id="toast-container" style="position:fixed;top:20px;right:20px;z-index:9998;display:flex;flex-direction:column;gap:10px"></div>
+
+    <div id="custom-popup" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9997;display:none;align-items:center;justify-content:center">
+        <div style="background:#18181b;padding:25px;border-radius:16px;border:1px solid #333;max-width:300px">
+            <p id="popup-msg" style="margin-bottom:20px;color:white;text-align:center"></p>
+            <div id="popup-acts" style="display:flex;gap:10px;justify-content:center"></div>
+        </div>
+    </div>
+
+    <div id="media-viewer">
+        <span class="close-media" onclick="document.getElementById('media-viewer').style.display='none'">&times;</span>
+        <img id="media-img">
+    </div>
+
+    <div id="input-modal">
+        <div class="modal-box">
+            <h3 id="im-title" style="margin-bottom:15px">Edit</h3>
+            <div id="im-fields"></div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:15px">
+                <button onclick="document.getElementById('input-modal').style.display='none'" class="btn" style="background:#333;color:white;padding:8px 16px">Cancel</button>
+                <button id="im-save" class="btn" style="background:var(--primary);color:white;padding:8px 20px">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <h1 class="login-title">All In One Community</h1>
+            <span class="founder-badge">Founder: CDT Master Kartik Garade</span>
+            
+            <input id="u-in" class="login-input" placeholder="Username" autocomplete="off">
+            <input id="p-in" type="password" class="login-input" placeholder="Password">
+            <button class="btn btn-login" onclick="app.login()">Get Started</button>
+            <p id="err-msg" style="color:var(--danger); margin-top:15px; font-size:0.9rem; display:none;"></p>
+        </div>
+    </div>
+
+    <div id="main-app">
+        <header>
+            <div class="user-info">
+                <img id="u-img" class="avatar skeleton">
+                <div>
+                    <h3 id="u-name" class="skeleton" style="width:80px;height:1em;margin-bottom:5px"></h3>
+                    <span id="u-role" class="skeleton" style="width:50px;height:0.8em;font-size:0.8rem;color:#888"></span>
+                </div>
+            </div>
+            <button onclick="location.reload()" class="logout-btn">Logout</button>
+        </header>
+
+        <div class="glass" style="padding:20px; margin-bottom:20px; border-left:4px solid var(--accent); display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.9rem; color:#aaa;">Today's Status</span>
+            <span id="my-att-status" style="font-weight:800; font-size:1.1rem;">Checking...</span>
+        </div>
+
+        <div class="section-title">QUICK ACCESS</div>
+        <div class="grid">
+            <div class="app-card" onclick="app.open('notes')"><i class="fas fa-book" style="color:#f472b6"></i><span>Notes</span></div>
+            <div class="app-card" onclick="app.open('ann')"><i class="fas fa-bullhorn" style="color:#22d3ee"></i><span>Announce</span><div id="badge-ann" class="badge hidden">0</div></div>
+            <div class="app-card" onclick="app.open('chat')"><i class="fas fa-comments" style="color:#a78bfa"></i><span>Chat</span><div id="badge-chat" class="badge hidden">0</div></div>
+            <div class="app-card" onclick="app.open('email')"><i class="fas fa-envelope"></i><span>Email</span></div>
+            <div class="app-card" onclick="app.open('papers')"><i class="fas fa-file-alt"></i><span>Papers</span></div>
+            <div class="app-card" onclick="app.open('syllabus')"><i class="fas fa-chart-pie"></i><span>Syllabus</span></div>
+            <div class="app-card" onclick="app.open('timetable')"><i class="fas fa-calendar-alt"></i><span>Table</span></div>
+            <div class="app-card" onclick="app.open('news')"><i class="fas fa-globe"></i><span>News</span></div>
+            <div class="app-card" onclick="app.open('teach')"><i class="fas fa-chalkboard-user"></i><span>Teachers</span></div>
+        </div>
+
+        <div id="admin-zone" class="admin-zone">
+            <div class="admin-head"><i class="fas fa-shield-alt"></i> Admin Panel</div>
+            <div class="admin-grid">
+                <div class="admin-btn" onclick="app.modal('Add Event',[{id:'t',label:'Title'},{id:'d',label:'Date'}],(v)=>app.addEvent(v[0],v[1]))"><i class="fas fa-calendar-plus"></i><span>Event</span></div>
+                <div class="admin-btn" onclick="app.modal('Update Exam',[{id:'n',label:'Name'},{id:'d',label:'Date'}],(v)=>app.updateExam(v[0],v[1]))"><i class="fas fa-edit"></i><span>Set Exam</span></div>
+                <div class="admin-btn" onclick="app.openAttn()"><i class="fas fa-user-check" style="color:var(--success)"></i><span>Attendance</span></div>
+                <div class="admin-btn" onclick="app.openBan()"><i class="fas fa-users-cog" style="color:var(--warning)"></i><span>Users / VIP</span></div>
+            </div>
+        </div>
+
+        <div class="section-title">SCHEDULE</div>
+        <div class="cal-box">
+            <div class="cal-header"><span id="cal-month">Month</span> <span id="clock" style="font-weight:400;color:#888">00:00</span></div>
+            <div class="week-row"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>
+            <div id="cal-grid" class="cal-grid"></div>
+            <div style="margin-top:15px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);font-size:0.8rem;color:#666;display:flex;justify-content:space-between">
+                <span>Next: <b id="next-ev" style="color:var(--text)">None</b></span>
+            </div>
+        </div>
+
+        <div class="glass" style="padding:15px; display:flex; gap:15px; align-items:center; margin-bottom:20px; border:1px solid rgba(239,68,68,0.3); background:rgba(239,68,68,0.05)">
+            <span class="exam-badge">EXAM</span>
+            <span id="next-exam-text" style="font-size:0.9rem;">Loading...</span>
+            <i class="fas fa-trash del-icon" id="exam-del-btn" style="margin-left:auto; display:none" onclick="app.delExam()"></i>
+        </div>
+    </div>
+
+    <div id="feature-modal">
+        <div class="modal-nav">
+            <button onclick="document.getElementById('feature-modal').style.display='none'" style="background:none;border:none;color:white;font-size:1.2rem"><i class="fas fa-arrow-left"></i></button>
+            <b id="f-title">Title</b>
+            <div></div>
+        </div>
+        <div id="f-body" style="flex:1;overflow-y:auto;padding:20px;scroll-behavior:smooth"></div>
+    </div>
+
+    <script type="module" src="comm.js"></script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 let z = 100;
 let windows = {};
 let currentActiveWindow = null;
+let isResizing = false;
+let isDragging = false;
 
 // Update clock every second
 setInterval(() => {
@@ -100,10 +102,12 @@ function showDeleteDialog() {
       right: 0;
       bottom: 0;
       background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 10000;
+      animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     `;
     document.body.appendChild(dialogOverlay);
   }
@@ -111,27 +115,29 @@ function showDeleteDialog() {
   const dialog = document.createElement("div");
   dialog.id = "deleteDialog";
   dialog.style.cssText = `
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    padding: 32px;
     text-align: center;
-    min-width: 400px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    font-family: Arial, sans-serif;
+    min-width: 420px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   `;
   
   dialog.innerHTML = `
-    <h3 style="margin: 0 0 20px 0; color: #333;">Delete Document</h3>
-    <p style="margin: 0 0 30px 0; color: #666;">Select an action:</p>
-    <div style="display: flex; gap: 10px; justify-content: center;">
-      <button onclick="performDelete('recycle')" style="padding: 10px 20px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
-        🗑️ Delete (Move to Recycle Bin)
+    <h3 style="margin: 0 0 12px 0; color: #1a1a1a; font-size: 18px; font-weight: 600;">Delete Document</h3>
+    <p style="margin: 0 0 28px 0; color: #666; font-size: 14px;">Select how you want to delete this file:</p>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <button onclick="performDelete('recycle')" style="padding: 12px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; width: 100%;">
+        🗑️ Move to Recycle Bin
       </button>
-      <button onclick="performDelete('permanent')" style="padding: 10px 20px; background: #d32f2f; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+      <button onclick="performDelete('permanent')" style="padding: 12px 20px; background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.3); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; width: 100%;">
         ⚠️ Delete Permanently
       </button>
-      <button onclick="performDelete('cancel')" style="padding: 10px 20px; background: #757575; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+      <button onclick="performDelete('cancel')" style="padding: 12px 20px; background: rgba(0, 0, 0, 0.08); color: #333; border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; width: 100%;">
         Cancel
       </button>
     </div>
@@ -282,29 +288,42 @@ function createWindow(title, contentHTML, onClose) {
   return win;
 }
 
-/* Drag */
-function dragWindow(win, bar) {
-  let x=0, y=0;
-  bar.onmousedown = e => {
+/* Drag and Resize Functions */
+function dragWindow(win, titlebar) {
+  let x, y;
+  
+  titlebar.onmousedown = (e) => {
+    isDragging = true;
     x = e.clientX - win.offsetLeft;
     y = e.clientY - win.offsetTop;
     win.style.zIndex = ++z;
+    win.style.transition = 'box-shadow 0.2s ease';
+    win.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.25)';
+    
     document.onmousemove = e2 => {
       win.style.left = (e2.clientX - x) + "px";
       win.style.top = (e2.clientY - y) + "px";
     };
-    document.onmouseup = () => document.onmousemove = null;
+    
+    document.onmouseup = () => {
+      isDragging = false;
+      document.onmousemove = null;
+      win.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
+    };
   };
 }
 
-/* Resize */
 function resizeWindow(win, handle) {
   let startX, startY, startWidth, startHeight;
+  
   handle.onmousedown = e => {
+    e.preventDefault();
+    isResizing = true;
     startX = e.clientX;
     startY = e.clientY;
     startWidth = win.offsetWidth;
     startHeight = win.offsetHeight;
+    win.style.zIndex = ++z;
     
     document.onmousemove = e2 => {
       const newWidth = Math.max(250, startWidth + (e2.clientX - startX));
@@ -312,7 +331,11 @@ function resizeWindow(win, handle) {
       win.style.width = newWidth + "px";
       win.style.height = newHeight + "px";
     };
-    document.onmouseup = () => document.onmousemove = null;
+    
+    document.onmouseup = () => {
+      isResizing = false;
+      document.onmousemove = null;
+    };
   };
 }
 
@@ -332,10 +355,11 @@ function updateTaskbar() {
     btn.onclick = () => {
       if (w.element.classList.contains("hidden")) {
         w.element.classList.remove("hidden");
+        btn.classList.add("active");
       } else {
         w.element.classList.add("hidden");
+        btn.classList.remove("active");
       }
-      updateTaskbar();
     };
     container.appendChild(btn);
   }
@@ -343,19 +367,20 @@ function updateTaskbar() {
 
 /* Notepad */
 function openNotepad() {
-  let saved = true;
-  let filename = "Document" + Date.now() + ".txt";
-  const noteId = "note_" + Date.now();
+  const noteId = "notearea_" + Date.now();
+  const saveId = "savebtn_" + Date.now();
   const filenameId = "filename_" + Date.now();
-  const saveId = "save_" + Date.now();
+  let saved = true;
   
-  const win = createWindow("Notepad",
-    `<div style="display: flex; flex-direction: column; height: 100%;">
-      <div style="padding: 5px; border-bottom: 1px solid #ddd; font-size: 12px; color: #666;">
-        File: <input type="text" id="${filenameId}" value="${filename}" style="width: 200px; padding: 3px;">
-        <button id="${saveId}">Save</button>
+  createWindow(
+    "Notepad",
+    `<div style="display: flex; flex-direction: column; height: calc(100% - 5px); background: rgba(255,255,255,0.4);">
+      <div style="padding: 10px 12px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); font-size: 13px; color: #666; display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,0.3);">
+        <span style="font-weight: 500;">File:</span> 
+        <input type="text" id="${filenameId}" value="Document.txt" style="flex: 1; padding: 6px 10px; border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 6px; font-size: 13px;">
+        <button id="${saveId}" style="padding: 6px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">💾 Save</button>
       </div>
-      <textarea id="${noteId}" style="flex: 1; border: none; padding: 10px; font-family: 'Courier New', monospace;"></textarea>
+      <textarea id="${noteId}" style="flex: 1; border: none; padding: 16px; font-family: 'Courier New', monospace; font-size: 13px; resize: none; background: rgba(255,255,255,0.5);"></textarea>
     </div>`,
     () => {
       if (!saved) return confirm("Save changes before closing?");
@@ -367,6 +392,9 @@ function openNotepad() {
   const noteArea = document.getElementById(noteId);
   const fileInput = document.getElementById(filenameId);
   
+  saveBtn.onmouseover = () => saveBtn.style.transform = 'translateY(-2px)';
+  saveBtn.onmouseout = () => saveBtn.style.transform = 'translateY(0)';
+  
   saveBtn.onclick = () => {
     const text = noteArea.value;
     const name = fileInput.value || "Document.txt";
@@ -374,7 +402,14 @@ function openNotepad() {
     files[name] = text;
     localStorage.setItem("files", JSON.stringify(files));
     saved = true;
-    alert("File saved!");
+    
+    // Show success feedback
+    saveBtn.style.background = 'linear-gradient(135deg, #00d084 0%, #00a67e 100%)';
+    saveBtn.innerText = '✓ Saved';
+    setTimeout(() => {
+      saveBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+      saveBtn.innerText = '💾 Save';
+    }, 1500);
   };
   
   noteArea.oninput = () => saved = false;
@@ -398,7 +433,7 @@ function viewFile(filename) {
   const files = JSON.parse(localStorage.getItem("files") || "{}");
   const content = files[filename];
   if (content !== undefined) {
-    createWindow(filename, `<pre style="white-space: pre-wrap; word-wrap: break-word;">${content}</pre>`);
+    createWindow(filename, `<pre style="white-space: pre-wrap; word-wrap: break-word; padding: 16px; margin: 0;">${content}</pre>`);
   }
 }
 
@@ -621,18 +656,19 @@ function openWallpapers() {
 
 function previewWallpaper(gradient) {
   selectedWallpaper = gradient;
+  document.body.style.background = gradient;
   
-  // Find current window and update content
+  // Show confirmation
   for (let id in windows) {
     if (windows[id].title === "Wallpapers") {
       const contentDiv = windows[id].element.querySelector(".content");
       contentDiv.innerHTML = `
-        <div class="wallpaper-preview fade-in">
-          <p style="margin: 0; color: #666; font-size: 14px;">Preview:</p>
-          <div class="wallpaper-preview-box" style="background: ${gradient};"></div>
-          <div class="wallpaper-buttons">
-            <button class="wallpaper-btn set" onclick="setWallpaper()">Set as Wallpaper</button>
-            <button class="wallpaper-btn cancel" onclick="cancelWallpaper()">Cancel</button>
+        <div style="text-align: center; padding: 50px 20px; animation: fadeIn 0.4s ease;">
+          <div style="font-size: 56px; margin: 0; animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">✓</div>
+          <p style="font-size: 16px; margin-top: 16px; color: #2d5016; font-weight: 600;">Wallpaper applied successfully!</p>
+          <div style="margin-top: 24px; display: flex; gap: 10px; justify-content: center;">
+            <button onclick="setWallpaper()" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">✓ Save</button>
+            <button onclick="cancelWallpaper()" style="padding: 10px 20px; background: rgba(0,0,0,0.1); color: #333; border: 1px solid rgba(0,0,0,0.2); border-radius: 6px; cursor: pointer; font-weight: 600;">Cancel</button>
           </div>
         </div>
       `;
@@ -643,25 +679,14 @@ function previewWallpaper(gradient) {
 
 function setWallpaper() {
   if (selectedWallpaper) {
-    document.body.style.background = selectedWallpaper;
     localStorage.setItem("wallpaper", selectedWallpaper);
     
-    // Show feedback
+    // Close wallpapers window
     for (let id in windows) {
       if (windows[id].title === "Wallpapers") {
-        const contentDiv = windows[id].element.querySelector(".content");
-        contentDiv.innerHTML = `
-          <div style="text-align: center; padding: 40px 20px; color: #2d5016;">
-            <p style="font-size: 48px; margin: 0;">✓</p>
-            <p style="font-size: 16px; margin-top: 10px;">Wallpaper set successfully!</p>
-          </div>
-        `;
-        const wallpaperWindow = windows[id].element;
-        setTimeout(() => {
-          wallpaperWindow.remove();
-          delete windows[id];
-          updateTaskbar();
-        }, 2000);
+        windows[id].element.remove();
+        delete windows[id];
+        updateTaskbar();
         break;
       }
     }
@@ -670,6 +695,13 @@ function setWallpaper() {
 
 function cancelWallpaper() {
   selectedWallpaper = null;
+  // Restore previous wallpaper
+  const savedWallpaper = localStorage.getItem("wallpaper");
+  if (savedWallpaper) {
+    document.body.style.background = savedWallpaper;
+  } else {
+    document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  }
   openWallpapers();
 }
 
@@ -680,3 +712,46 @@ window.addEventListener('load', () => {
     document.body.style.background = savedWallpaper;
   }
 });
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideUp {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeOut {
+    to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+`;
+document.head.appendChild(style);
